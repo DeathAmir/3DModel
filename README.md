@@ -94,3 +94,15 @@ This repository includes `.github/workflows/generate-3d.yml`. It accepts a promp
 **GPU runner requirement:** the workflow targets a GitHub-hosted GPU larger runner named `trellis-gpu`. GitHub currently offers managed GPU larger runners (Tesla T4, 16 GB VRAM) only to organizations on GitHub Team or Enterprise Cloud. A repository on a personal Free account cannot use this runner until it is transferred to an eligible organization and that organization creates/enables the GPU runner. The standard `ubuntu-latest` runner has no NVIDIA GPU and cannot run TRELLIS. See [GitHub larger runners](https://docs.github.com/en/actions/concepts/runners/larger-runners) and [GPU runner specifications](https://docs.github.com/en/actions/reference/runners/larger-runners).
 
 After the organization creates a Linux GPU runner with the runner name/label `trellis-gpu`, the workflow can be launched from the Actions tab. GPU usage is billed by GitHub. The generated model is delivered as an Actions artifact; large model weights are cached on the runner and are never committed to Git.
+
+
+## CPU-only GitHub Actions generation
+
+Use **Actions → Generate 3D Model (CPU + RAM) → Run workflow**. This workflow does not request a GPU, CUDA, or a self-hosted runner. It uses the standard `ubuntu-latest` runner, installs CPU-only PyTorch, and runs the OpenAI Shap-E text-to-3D pipeline. The generated mesh is exported as GLB and PLY with metadata, then uploaded as an Actions artifact.
+
+Inputs:
+- Prompt (defaults to `prompts/nader_shah_afshar.txt`).
+- Seed.
+- Diffusion steps (24, 32, 48, or 64; more steps take longer).
+
+**Important limitations:** TRELLIS itself is CUDA/NVIDIA-oriented and is not the engine used by this CPU workflow. Shap-E is an older, lower-fidelity text-to-3D model; CPU inference can take a long time and may produce less detailed characters than TRELLIS. The workflow uses CPU RAM and CPU threads only. Runner memory and execution time are finite, so a job can still run out of memory or hit its timeout. Review the GLB in Blender before using it in a game.
