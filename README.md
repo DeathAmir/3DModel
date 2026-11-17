@@ -41,9 +41,17 @@ The generated artifact contains:
 
 The model is uploaded as a GitHub Actions artifact; large generated assets are not committed to Git.
 
-## Trailer
+## Persian AI trailer (CPU + RAM)
 
-A real gameplay trailer showing a person playing the actual game cannot be truthfully rendered from this repository yet: the game executable/build and gameplay footage are not present here. Provide a gameplay recording (MP4) or the runnable game build and a capture, and the trailer can then be assembled with Persian narration. No fake gameplay video is included.
+The trailer is now generated entirely from AI-created historical scenes; it does not depend on gameplay footage, a face-camera recording, a cloud API key, CUDA, or an NVIDIA GPU.
+
+- Image model: Stable Diffusion Turbo, executed on CPU using system RAM.
+- Persian voice: offline Piper neural TTS (`fa_IR-amir-medium`).
+- Output: cinematic 1080p / 30 FPS MP4 with Persian RTL titles and generated ambient soundtrack.
+- Workflow: [`.github/workflows/build-persian-trailer.yml`](.github/workflows/build-persian-trailer.yml).
+- Output artifact: `kheezesh-farmanravaan-persian-ai-trailer-cpu`.
+
+The result is clearly labelled as an AI-generated cinematic trailer, not real gameplay. Open **Actions → Build Persian AI Trailer (CPU + RAM)** to view the run and download its MP4 artifact.
 
 ## References
 
