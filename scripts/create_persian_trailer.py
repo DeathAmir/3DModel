@@ -14,8 +14,7 @@ API = "https://api.replicate.com/v1"
 MODEL = "wan-video/wan-2.7-t2v"
 TOKEN = os.environ.get("REPLICATE_API_TOKEN", "").strip()
 
-PROMPT = os.environ.get(
-    "VIDEO_PROMPT",
+PROMPT = os.environ.get("VIDEO_PROMPT") or (
     "A breathtaking, historically inspired cinematic trailer set in 18th-century Persia during the rise of Nader Shah Afshar. "
     "Open with an immense aerial view over Isfahan at sunrise, golden light spilling across Persian domes and gardens. "
     "A powerful Persian commander inspired by Nader Shah, wearing authentic-looking Afshar-era robes, armor and a tall turban, "
