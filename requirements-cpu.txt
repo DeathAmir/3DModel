@@ -2,7 +2,8 @@
 torch
 torchvision
 diffusers==0.32.2
-transformers
+transformers==4.46.3
+huggingface_hub==0.27.1
 accelerate
 safetensors
 trimesh
