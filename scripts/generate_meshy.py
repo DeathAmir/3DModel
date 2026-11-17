@@ -11,7 +11,7 @@ KEY = os.environ.get("MESHY_API_KEY")
 OUT = Path("outputs/nader_shah_afshar")
 OUT.mkdir(parents=True, exist_ok=True)
 
-PROMPT = """Create a historically grounded, full-body 3D game character representing Nader Shah Afshar (Nader Qoli Beg), the famous 18th-century Afsharid Shah of Persia, not a generic fantasy king. A mature Persian military ruler with a recognizable stern historical-warrior presence, strong nose, thick dark moustache and beard, wearing authentic 18th-century Afsharid Persian royal military clothing: layered deep crimson and dark teal coat, detailed woven fabric, gold embroidery, broad sash, leather belt, historically plausible Persian armor accents, tall boots, and a Persian turban with a restrained jeweled aigrette. Full figure, head to toe, feet visible, centered, neutral A-pose suitable for game rigging, anatomically correct human body, realistic face and hands, individual fingers, detailed fabric folds, metal, leather and embroidery. Premium realistic historical strategy game asset, physically based materials, clean silhouette, no fantasy horns, no modern objects, no extra limbs, no text, no watermark."""
+PROMPT = """Full-body realistic 3D game character of Nader Shah Afshar (Nader Qoli Beg), the famous 18th-century Afsharid Shah of Persia, a Persian human ruler, not a fantasy king. Mature stern face, strong nose, thick dark moustache and beard. Afsharid royal military clothing: crimson and dark-teal coat, woven fabric, gold embroidery, broad sash, leather belt, steel armor details, tall Persian boots, traditional Persian turban with a small jeweled aigrette. Head-to-toe, centered neutral A-pose for rigging, anatomically correct body, realistic face, hands and fingers, detailed fabric folds, metal and leather. Premium realistic historical strategy game asset, PBR materials, natural skin and cloth textures, clean silhouette. No fantasy elements, modern objects, extra limbs, text or watermark."""
 TEXTURE_PROMPT = "Historically plausible 18th-century Afsharid Persian royal military attire. Realistic woven crimson and deep teal fabric, intricate gold thread embroidery, aged polished steel and brass, natural leather, realistic skin, detailed moustache and beard. PBR base color, metallic, roughness and normal detail. No painted studio shadows."
 
 def call(path, method="GET", payload=None):
@@ -45,7 +45,9 @@ def download(url, path):
 def main():
     if not KEY:
         raise SystemExit("Missing MESHY_API_KEY repository secret. Add it in Settings > Secrets and variables > Actions.")
-    prompt = os.environ.get("MODEL_PROMPT", PROMPT)[:800]
+    prompt = os.environ.get("MODEL_PROMPT", PROMPT).strip() or PROMPT
+    if len(prompt) > 800:
+        raise SystemExit(f"MODEL_PROMPT is {len(prompt)} characters; Meshy allows at most 800.")
     model = os.environ.get("MESHY_MODEL", "latest")
     geometry = os.environ.get("GEOMETRY_RESOLUTION", "standard")
     texture = os.environ.get("TEXTURE_RESOLUTION", "4k")
