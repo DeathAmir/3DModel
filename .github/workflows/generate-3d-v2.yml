@@ -1,134 +1,96 @@
-name: Generate 3D Model (GPU)
+name: Generate 3D Model (CPU + RAM)
 
-run-name: "3D generation — ${{ inputs.model_id }}"
+run-name: "CPU 3D generation — Shap-E"
 
 on:
   workflow_dispatch:
     inputs:
-      runner:
-        description: "ubuntu-latest starts immediately but has no GPU; trellis-gpu requires an online NVIDIA GPU runner"
-        required: true
-        type: choice
-        options:
-          - ubuntu-latest
-          - trellis-gpu
-        default: ubuntu-latest
       prompt:
-        description: "English prompt (empty = use the repository prompt file)"
+        description: "English prompt (empty = use prompts/nader_shah_afshar.txt)"
         required: false
         type: string
         default: ""
-      model_id:
-        description: "TRELLIS model"
-        required: true
-        type: choice
-        options:
-          - microsoft/TRELLIS-text-large
-          - microsoft/TRELLIS-text-base
-        default: microsoft/TRELLIS-text-large
       seed:
         description: "Generation seed"
         required: true
         type: string
         default: "42"
-      texture_size:
-        description: "Texture resolution"
+      steps:
+        description: "Quality / speed (32 recommended; higher is slower)"
         required: true
         type: choice
         options:
-          - "1024"
-          - "2048"
-        default: "2048"
+          - "24"
+          - "32"
+          - "48"
+          - "64"
+        default: "32"
 
 permissions:
   contents: read
 
 concurrency:
-  group: trellis-generation
+  group: cpu-3d-generation
   cancel-in-progress: true
 
 jobs:
   generate:
-    runs-on: ${{ inputs.runner }}
+    runs-on: ubuntu-latest
     timeout-minutes: 360
     env:
       HF_HOME: ${{ github.workspace }}/.models/huggingface
-      TRELLIS_ROOT: ${{ github.workspace }}/../TRELLIS
-      SPCONV_ALGO: native
+      TOKENIZERS_PARALLELISM: "false"
+      OMP_NUM_THREADS: "4"
+      MKL_NUM_THREADS: "4"
+      OPENBLAS_NUM_THREADS: "4"
+      CPU_THREADS: "4"
       PROMPT_INPUT: ${{ inputs.prompt }}
-      MODEL_ID: ${{ inputs.model_id }}
       SEED: ${{ inputs.seed }}
-      TEXTURE_SIZE: ${{ inputs.texture_size }}
+      STEPS: ${{ inputs.steps }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Check GPU before installing anything
-        shell: bash
+      - name: Show CPU and RAM
         run: |
-          echo "Runner: $RUNNER_NAME"
-          echo "OS: $RUNNER_OS"
-          if ! command -v nvidia-smi >/dev/null 2>&1; then
-            echo "::error title=No NVIDIA GPU runner::This runner has no NVIDIA GPU. ubuntu-latest cannot run TRELLIS. Select trellis-gpu only after an online NVIDIA GPU runner with that label has been registered."
-            exit 1
-          fi
-          nvidia-smi
-          python3 - <<'PY'
-          import subprocess
-          rows = subprocess.check_output(
-              ["nvidia-smi", "--query-gpu=memory.total", "--format=csv,noheader,nounits"],
-              text=True
-          ).strip().splitlines()
-          if not rows or max(int(row.strip()) for row in rows) < 15000:
-              raise SystemExit("The NVIDIA GPU must have at least 16 GB VRAM.")
-          PY
+          echo "CPU:"
+          lscpu
+          echo "Memory:"
+          free -h
+          echo "This workflow runs on CPU only; no CUDA or GPU is required."
 
-      - name: Set up Miniforge
-        uses: conda-incubator/setup-miniconda@v3
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          miniforge-variant: Miniforge3
-          miniforge-version: latest
           python-version: "3.10"
-          auto-activate-base: true
-          use-mamba: true
+          cache: pip
+          cache-dependency-path: requirements-cpu.txt
 
-      - name: Cache Hugging Face weights
+      - name: Cache Hugging Face model files
         uses: actions/cache@v4
         with:
           path: .models/huggingface
-          key: trellis-hf-${{ inputs.model_id }}-v2
+          key: shap-e-cpu-model-v1
           restore-keys: |
-            trellis-hf-${{ inputs.model_id }}-
+            shap-e-cpu-model-
 
-      - name: Clone and install Microsoft TRELLIS
-        shell: bash -el {0}
+      - name: Install CPU-only PyTorch and Shap-E dependencies
         run: |
-          git clone --recurse-submodules https://github.com/microsoft/TRELLIS.git "$TRELLIS_ROOT"
-          cd "$TRELLIS_ROOT"
-          . ./setup.sh --new-env --basic --xformers --flash-attn --spconv --mipgaussian --kaolin --nvdiffrast
-          conda activate trellis
           python -m pip install --upgrade pip
-          python -m pip install -r "$GITHUB_WORKSPACE/requirements.txt"
+          python -m pip install -r requirements-cpu.txt
           python - <<'PY'
           import torch
-          if not torch.cuda.is_available():
-              raise SystemExit("PyTorch cannot access CUDA on this runner.")
           print("PyTorch:", torch.__version__)
-          print("CUDA:", torch.version.cuda)
-          print("GPU:", torch.cuda.get_device_name(0))
-          print("VRAM GiB:", round(torch.cuda.get_device_properties(0).total_memory / 1024**3, 2))
+          print("CUDA available:", torch.cuda.is_available())
+          print("CPU threads:", torch.get_num_threads())
           PY
 
-      - name: Generate textured GLB, PLY and metadata
-        shell: bash -el {0}
+      - name: Generate 3D mesh on CPU
         run: |
-          conda activate trellis
-          cd "$GITHUB_WORKSPACE"
           args=(
-            --model-id "$MODEL_ID"
             --seed "$SEED"
-            --texture-size "$TEXTURE_SIZE"
+            --steps "$STEPS"
             --output-dir outputs/nader_shah_afshar
           )
           if [ -n "$PROMPT_INPUT" ]; then
@@ -136,13 +98,13 @@ jobs:
           else
             args+=(--prompt-file prompts/nader_shah_afshar.txt)
           fi
-          python generate.py "${args[@]}"
+          python generate_cpu.py "${args[@]}"
 
-      - name: Upload generated model files
+      - name: Upload generated 3D files
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: nader-shah-afshar-3d
+          name: nader-shah-afshar-cpu-3d
           path: |
             outputs/nader_shah_afshar/*.glb
             outputs/nader_shah_afshar/*.ply
