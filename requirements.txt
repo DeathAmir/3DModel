@@ -1,0 +1,4 @@
+# Install PyTorch, CUDA and TRELLIS native dependencies with the official
+# Microsoft/TRELLIS setup.sh before installing this small project requirements file.
+huggingface_hub>=0.27.0
+safetensors>=0.4.5

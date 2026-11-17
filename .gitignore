@@ -1,0 +1,8 @@
+__pycache__/
+*.py[cod]
+.venv/
+.env
+.cache/
+.huggingface/
+outputs/*
+!outputs/.gitkeep
