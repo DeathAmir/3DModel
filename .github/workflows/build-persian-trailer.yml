@@ -7,12 +7,6 @@ on:
         description: "Optional English text-to-video prompt"
         required: false
         type: string
-  push:
-    branches:
-      - main
-    paths:
-      - ".github/workflows/build-persian-trailer.yml"
-      - "scripts/create_persian_trailer.py"
 
 permissions:
   contents: read
