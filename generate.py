@@ -66,6 +66,10 @@ def main() -> int:
             "this pipeline; use a compatible Linux NVIDIA GPU host."
         )
 
+    trellis_root = Path(os.environ.get("TRELLIS_ROOT", Path(__file__).resolve().parent.parent / "TRELLIS")).expanduser()
+    if trellis_root.is_dir() and str(trellis_root.resolve()) not in sys.path:
+        sys.path.insert(0, str(trellis_root.resolve()))
+
     from trellis.pipelines import TrellisTextTo3DPipeline
     from trellis.utils import postprocessing_utils
 
