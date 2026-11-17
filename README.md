@@ -86,3 +86,11 @@ Run `python generate.py --help` for all options:
 - [TRELLIS paper](https://arxiv.org/abs/2412.01506)
 
 TRELLIS is an upstream project by Microsoft Research. This repository is an integration workflow and is not affiliated with Microsoft.
+
+## Generate directly with GitHub Actions
+
+This repository includes `.github/workflows/generate-3d.yml`. It accepts a prompt, model choice, seed, and texture size from **Actions → Generate Textured 3D Model → Run workflow**. The job clones Microsoft's TRELLIS source, installs its CUDA dependencies, downloads the selected Hugging Face model into the runner cache, generates the textured GLB, and uploads the GLB/PLY/metadata as a workflow artifact.
+
+**GPU runner requirement:** the workflow targets a GitHub-hosted GPU larger runner named `trellis-gpu`. GitHub currently offers managed GPU larger runners (Tesla T4, 16 GB VRAM) only to organizations on GitHub Team or Enterprise Cloud. A repository on a personal Free account cannot use this runner until it is transferred to an eligible organization and that organization creates/enables the GPU runner. The standard `ubuntu-latest` runner has no NVIDIA GPU and cannot run TRELLIS. See [GitHub larger runners](https://docs.github.com/en/actions/concepts/runners/larger-runners) and [GPU runner specifications](https://docs.github.com/en/actions/reference/runners/larger-runners).
+
+After the organization creates a Linux GPU runner with the runner name/label `trellis-gpu`, the workflow can be launched from the Actions tab. GPU usage is billed by GitHub. The generated model is delivered as an Actions artifact; large model weights are cached on the runner and are never committed to Git.
