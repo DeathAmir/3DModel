@@ -1,0 +1,137 @@
+name: Generate Textured 3D Model
+
+run-name: "3D generation — ${{ inputs.model_id }}"
+
+on:
+  workflow_dispatch:
+    inputs:
+      prompt:
+        description: "English 3D generation prompt (leave empty to use prompts/nader_shah_afshar.txt)"
+        required: false
+        type: string
+        default: ""
+      model_id:
+        description: "Hugging Face TRELLIS model"
+        required: true
+        type: choice
+        options:
+          - microsoft/TRELLIS-text-large
+          - microsoft/TRELLIS-text-base
+        default: microsoft/TRELLIS-text-large
+      seed:
+        description: "Generation seed"
+        required: true
+        type: string
+        default: "42"
+      texture_size:
+        description: "GLB texture resolution"
+        required: true
+        type: choice
+        options:
+          - "1024"
+          - "2048"
+        default: "2048"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: trellis-3d-generation
+  cancel-in-progress: false
+
+jobs:
+  generate:
+    # Create a GitHub-hosted GPU larger runner named "trellis-gpu"
+    # in an organization on GitHub Team / Enterprise Cloud.
+    runs-on: trellis-gpu
+    timeout-minutes: 360
+    env:
+      HF_HOME: ${{ github.workspace }}/.models/huggingface
+      TRELLIS_ROOT: ${{ github.workspace }}/../TRELLIS
+      SPCONV_ALGO: native
+      PROMPT_INPUT: ${{ inputs.prompt }}
+      MODEL_ID: ${{ inputs.model_id }}
+      SEED: ${{ inputs.seed }}
+      TEXTURE_SIZE: ${{ inputs.texture_size }}
+
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v4
+
+      - name: Verify NVIDIA GPU and CUDA
+        run: |
+          nvidia-smi
+          command -v nvcc
+          nvcc --version
+          python - <<'PY'
+          import subprocess
+          rows = subprocess.check_output([
+              "nvidia-smi", "--query-gpu=memory.total", "--format=csv,noheader,nounits"
+          ], text=True).strip().splitlines()
+          if not rows or max(int(x.strip()) for x in rows) < 15000:
+              raise SystemExit("TRELLIS needs an NVIDIA GPU with at least 16 GB VRAM.")
+          PY
+
+      - name: Cache Hugging Face model weights
+        uses: actions/cache@v4
+        with:
+          path: .models/huggingface
+          key: trellis-hf-${{ inputs.model_id }}-v1
+          restore-keys: |
+            trellis-hf-${{ inputs.model_id }}-
+
+      - name: Install TRELLIS and CUDA dependencies
+        shell: bash -el {0}
+        run: |
+          git clone --recurse-submodules https://github.com/microsoft/TRELLIS.git "$TRELLIS_ROOT"
+          cd "$TRELLIS_ROOT"
+          . ./setup.sh --new-env --basic --xformers --flash-attn --spconv --mipgaussian --kaolin --nvdiffrast
+          conda activate trellis
+          python -m pip install --upgrade pip
+          python -m pip install -r "$GITHUB_WORKSPACE/requirements.txt"
+          python - <<'PY'
+          import torch
+          print("PyTorch:", torch.__version__)
+          print("CUDA available:", torch.cuda.is_available())
+          if not torch.cuda.is_available():
+              raise SystemExit("CUDA is unavailable in the TRELLIS environment.")
+          print("GPU:", torch.cuda.get_device_name(0))
+          print("VRAM (GiB):", round(torch.cuda.get_device_properties(0).total_memory / 1024**3, 2))
+          PY
+
+      - name: Download model and generate textured GLB
+        shell: bash -el {0}
+        run: |
+          conda activate trellis
+          cd "$GITHUB_WORKSPACE"
+          python - <<'PY'
+          import os
+          import subprocess
+          import sys
+
+          command = [
+              sys.executable,
+              "generate.py",
+              "--model-id", os.environ["MODEL_ID"],
+              "--seed", os.environ["SEED"],
+              "--texture-size", os.environ["TEXTURE_SIZE"],
+              "--output-dir", "outputs/nader_shah_afshar",
+          ]
+          prompt = os.environ.get("PROMPT_INPUT", "").strip()
+          if prompt:
+              command.extend(["--prompt", prompt])
+          else:
+              command.extend(["--prompt-file", "prompts/nader_shah_afshar.txt"])
+          subprocess.run(command, check=True)
+          PY
+
+      - name: Upload generated 3D files
+        uses: actions/upload-artifact@v4
+        with:
+          name: nader-shah-afshar-3d
+          path: |
+            outputs/nader_shah_afshar/*.glb
+            outputs/nader_shah_afshar/*.ply
+            outputs/nader_shah_afshar/metadata.json
+          if-no-files-found: error
+          retention-days: 14
