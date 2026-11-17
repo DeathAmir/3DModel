@@ -55,7 +55,7 @@ Or pass a custom English prompt:
 python generate.py --prompt "A stylized full-body Persian royal warrior..." --seed 7
 ```
 
-The first run downloads `microsoft/TRELLIS-text-large` into the Hugging Face cache. Set `HF_HOME` to change the cache location:
+The first run downloads `microsoft/TRELLIS-text-large` into this repository's local `.models/huggingface/` cache (ignored by Git, so the multi-gigabyte weights are not pushed to GitHub). Set `HF_HOME` to change the cache location:
 
 ```bash
 export HF_HOME=/path/to/huggingface-cache
