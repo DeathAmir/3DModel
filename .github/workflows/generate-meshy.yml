@@ -55,6 +55,19 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Prepare Persian loading screen first
+        run: |
+          test -f game/loading/index.html
+          mkdir -p outputs/loading-screen
+          cp game/loading/index.html outputs/loading-screen/index.html
+
+      - name: Upload Persian loading screen
+        uses: actions/upload-artifact@v4
+        with:
+          name: kheezesh-farmanravaan-persian-loading-screen
+          path: outputs/loading-screen/index.html
+          retention-days: 30
+
       - name: Validate Meshy API access
         run: |
           if [ -z "$MESHY_API_KEY" ]; then
