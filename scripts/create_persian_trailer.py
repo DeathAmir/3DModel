@@ -56,7 +56,7 @@ def main():
         "[0:v]scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2[game];"
         "[1:v]scale=480:-1,setsar=1[cam];"
         "[game][cam]overlay=W-w-48:48[withcam];"
-        "[2:v]format=rgba[title];[withcam][title]overlay=0:0:shortest=1[v]",
+        "[2:v]format=rgba[title];[withcam][title]overlay=0:0:eof_action=repeat[v]",
         "-map", "[v]", "-map", "3:a:0", "-c:v", "libx264", "-preset", "medium",
         "-crf", "19", "-c:a", "aac", "-b:a", "192k", "-shortest",
         "-movflags", "+faststart", str(OUT / "kheezesh-farmanravaan-trailer-fa.mp4")
