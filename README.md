@@ -1,108 +1,52 @@
-# 3DModel — Text-to-3D Game Asset Generator
+# خیزش فرمانروایان | Kheezesh-e Farmanravaan
 
-A prompt-driven 3D asset workflow powered by Microsoft's **TRELLIS Text Large**. On first run, the pipeline downloads the model from Hugging Face into its local cache, generates a 3D representation, extracts a textured GLB, and saves the result under `outputs/`.
+Asset-generation workspace for the Persian historical strategy game **خیزش فرمانروایان**.
 
-## Model
+## Persian loading screen
 
-- Hugging Face: [microsoft/TRELLIS-text-large](https://huggingface.co/microsoft/TRELLIS-text-large)
-- TRELLIS Text Large: 1.1B parameters; model repository is about 2.28 GB at the time of writing.
-- License: MIT (model card).
-- Output: textured GLB plus Gaussian PLY.
-- Default texture extraction: 2048 px.
+Open [game/loading/index.html](game/loading/index.html) in a browser to preview the responsive Persian RTL loading screen. It uses Vazirmatn, supports Persian text, and includes animated loading status and a historical gold/dark visual theme. It is a standalone HTML screen that can be embedded in a web-based loading surface or used as a design reference for a native game UI.
 
-TRELLIS's own authors note that text-conditioned results are less creative and detailed than image-conditioned generation. This repository uses the direct text pipeline to keep the workflow prompt-only. Full-body human characters are a difficult prompt category, so try multiple seeds and inspect the output before using it in a game.
+## Nader Shah Afshar — textured 3D character
 
-## Hardware requirements
+The previous CPU-only Shap-E pipeline was removed because its output quality was not suitable for a recognizable historical human character.
 
-The official TRELLIS project is tested on Linux and requires an NVIDIA CUDA GPU with at least 16 GB VRAM. 24 GB+ is recommended for more headroom. It is not a CPU-only workflow.
+The new workflow uses the official Meshy Text-to-3D API in two stages:
+1. Generate the character's geometry in a neutral A-pose.
+2. Refine the mesh with 4K PBR texturing and export a GLB.
 
-An AMD Radeon RX 580 does not provide the CUDA runtime required by this setup. Use a compatible Linux machine or cloud VM with an NVIDIA GPU. The model weights are cached by Hugging Face and are deliberately not committed to this Git repository.
+The prompt describes **Nader Shah Afshar**, the 18th-century Afsharid ruler of Persia, with historically inspired Persian military clothing, turban, moustache and beard. The generated result is an AI interpretation, not a guaranteed exact reconstruction of his face. For stronger likeness, provide a good full-body reference image and use an image-to-3D workflow.
 
-## Install
+### Configure the API key
 
-Follow the upstream installation steps because TRELLIS uses compiled CUDA extensions that must match the installed PyTorch/CUDA version:
+Create a Meshy API key and add it to the repository as an Actions secret named:
 
-```bash
-git clone --recurse-submodules https://github.com/microsoft/TRELLIS.git
-cd TRELLIS
-. ./setup.sh --new-env --basic --xformers --flash-attn --spconv --mipgaussian --kaolin --nvdiffrast
-conda activate trellis
-```
+`MESHY_API_KEY`
 
-Clone this project in a separate directory:
+Meshy API task creation requires an eligible paid plan and sufficient credits. The workflow does not store the key in the repository.
 
-```bash
-git clone https://github.com/DeathAmir/3DModel.git
-cd 3DModel
-pip install -r requirements.txt
-```
+### Run
 
-If TRELLIS is not located at `../TRELLIS`, set its path:
+1. Open **Actions**.
+2. Select **Generate Nader Shah Afshar (Meshy AI)**.
+3. Choose texture resolution (4K recommended) and geometry detail.
+4. Select **Run workflow**.
 
-```bash
-export TRELLIS_ROOT=/absolute/path/to/TRELLIS
-```
+Workflow file: `.github/workflows/generate-meshy.yml`
 
-## Generate Nader Shah Afshar
+The generated artifact contains:
+- `nader_shah_afshar.glb` — textured 3D model.
+- `texture_*_base_color.png`, `texture_*_metallic.png`, `texture_*_roughness.png`, `texture_*_normal.png` — maps returned by Meshy.
+- `model-preview.png` — preview image, when returned by the API.
+- `metadata.json` — generation settings and task identifiers.
 
-```bash
-python generate.py --prompt-file prompts/nader_shah_afshar.txt --seed 42 --texture-size 2048
-```
+The model is uploaded as a GitHub Actions artifact; large generated assets are not committed to Git.
 
-Or pass a custom English prompt:
+## Trailer
 
-```bash
-python generate.py --prompt "A stylized full-body Persian royal warrior..." --seed 7
-```
-
-The first run downloads `microsoft/TRELLIS-text-large` into this repository's local `.models/huggingface/` cache (ignored by Git, so the multi-gigabyte weights are not pushed to GitHub). Set `HF_HOME` to change the cache location:
-
-```bash
-export HF_HOME=/path/to/huggingface-cache
-```
-
-Generated files:
-
-- `outputs/nader_shah_afshar/nader_shah_afshar.glb` — textured mesh.
-- `outputs/nader_shah_afshar/nader_shah_afshar.ply` — Gaussian representation.
-- `outputs/nader_shah_afshar/metadata.json` — prompt, model, seed, and export settings.
-
-Import the GLB into Blender using **File → Import → glTF 2.0**. Check topology, UVs, scale, materials, and silhouette before production use. The pipeline does not rig or animate the character.
-
-## Options
-
-Run `python generate.py --help` for all options:
-
-- `--model-id`: Hugging Face model ID (default: `microsoft/TRELLIS-text-large`).
-- `--seed`: reproducible generation seed.
-- `--texture-size`: texture resolution (512–4096, default 2048).
-- `--simplify`: mesh simplification ratio (default 0.95).
-- `--output-dir`: output directory.
+A real gameplay trailer showing a person playing the actual game cannot be truthfully rendered from this repository yet: the game executable/build and gameplay footage are not present here. Provide a gameplay recording (MP4) or the runnable game build and a capture, and the trailer can then be assembled with Persian narration. No fake gameplay video is included.
 
 ## References
 
-- [Microsoft TRELLIS source and installation](https://github.com/microsoft/TRELLIS)
-- [TRELLIS Text Large on Hugging Face](https://huggingface.co/microsoft/TRELLIS-text-large)
-- [TRELLIS paper](https://arxiv.org/abs/2412.01506)
-
-TRELLIS is an upstream project by Microsoft Research. This repository is an integration workflow and is not affiliated with Microsoft.
-
-## Generate directly with GitHub Actions
-
-This repository includes `.github/workflows/generate-3d.yml`. It accepts a prompt, model choice, seed, and texture size from **Actions → Generate Textured 3D Model → Run workflow**. The job clones Microsoft's TRELLIS source, installs its CUDA dependencies, downloads the selected Hugging Face model into the runner cache, generates the textured GLB, and uploads the GLB/PLY/metadata as a workflow artifact.
-
-**GPU runner requirement:** the workflow targets a GitHub-hosted GPU larger runner named `trellis-gpu`. GitHub currently offers managed GPU larger runners (Tesla T4, 16 GB VRAM) only to organizations on GitHub Team or Enterprise Cloud. A repository on a personal Free account cannot use this runner until it is transferred to an eligible organization and that organization creates/enables the GPU runner. The standard `ubuntu-latest` runner has no NVIDIA GPU and cannot run TRELLIS. See [GitHub larger runners](https://docs.github.com/en/actions/concepts/runners/larger-runners) and [GPU runner specifications](https://docs.github.com/en/actions/reference/runners/larger-runners).
-
-After the organization creates a Linux GPU runner with the runner name/label `trellis-gpu`, the workflow can be launched from the Actions tab. GPU usage is billed by GitHub. The generated model is delivered as an Actions artifact; large model weights are cached on the runner and are never committed to Git.
-
-
-## CPU-only GitHub Actions generation
-
-Use **Actions → Generate 3D Model (CPU + RAM) → Run workflow**. This workflow does not request a GPU, CUDA, or a self-hosted runner. It uses the standard `ubuntu-latest` runner, installs CPU-only PyTorch, and runs the OpenAI Shap-E text-to-3D pipeline. The generated mesh is exported as GLB and PLY with metadata, then uploaded as an Actions artifact.
-
-Inputs:
-- Prompt (defaults to `prompts/nader_shah_afshar.txt`).
-- Seed.
-- Diffusion steps (24, 32, 48, or 64; more steps take longer).
-
-**Important limitations:** TRELLIS itself is CUDA/NVIDIA-oriented and is not the engine used by this CPU workflow. Shap-E is an older, lower-fidelity text-to-3D model; CPU inference can take a long time and may produce less detailed characters than TRELLIS. The workflow uses CPU RAM and CPU threads only. Runner memory and execution time are finite, so a job can still run out of memory or hit its timeout. Review the GLB in Blender before using it in a game.
+- [Meshy Text-to-3D API](https://docs.meshy.ai/en/api/text-to-3d)
+- [Meshy Image-to-3D API](https://docs.meshy.ai/en/api/image-to-3d)
+- [Meshy API pricing and access](https://www.meshy.ai/api)
