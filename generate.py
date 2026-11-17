@@ -50,6 +50,7 @@ def main() -> int:
         raise SystemExit("--simplify must be greater than 0 and at most 1.")
 
     os.environ.setdefault("SPCONV_ALGO", "native")
+    os.environ.setdefault("HF_HOME", str(Path(__file__).resolve().parent / ".models" / "huggingface"))
 
     try:
         import torch
