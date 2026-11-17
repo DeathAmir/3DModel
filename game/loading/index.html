@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#100d0a">
+<title>خیزش فرمانروایان | در حال آماده‌سازی</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:dark;--gold:#d7ad62;--cream:#f4e8d0;--muted:#b7a98e}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#100d0a;color:var(--cream);font-family:Vazirmatn,Tahoma,sans-serif}
+body{display:grid;place-items:center;background:radial-gradient(ellipse at 50% 42%,#47301b 0,#21180f 36%,#100d0a 75%)}
+.ambient{position:absolute;inset:0;overflow:hidden;pointer-events:none;background:linear-gradient(115deg,transparent 20%,#d7ad6209 48%,transparent 70%)}
+.ambient:before,.ambient:after{content:"";position:absolute;width:70vmax;height:70vmax;border:1px solid #d7ad621c;border-radius:50%;left:50%;top:48%;transform:translate(-50%,-50%);box-shadow:0 0 0 4vmax #d7ad6206,0 0 0 9vmax #d7ad6205}
+.ambient:after{width:48vmax;height:48vmax;border-style:dashed;animation:spin 100s linear infinite}
+@keyframes spin{to{transform:translate(-50%,-50%) rotate(360deg)}}
+main{position:relative;width:min(900px,92vw);min-height:min(640px,90vh);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:48px 24px}
+.emblem{width:104px;height:104px;border:1px solid #d7ad6277;transform:rotate(45deg);display:grid;place-items:center;margin-bottom:38px;box-shadow:0 0 55px #d7ad621c,inset 0 0 25px #d7ad6212}
+.emblem span{transform:rotate(-45deg);font-size:48px;color:var(--gold);font-weight:800}
+.eyebrow{font-size:12px;letter-spacing:5px;color:var(--gold);margin-bottom:12px}
+h1{font-size:clamp(34px,6vw,64px);line-height:1.35;margin:0;font-weight:900;text-shadow:0 5px 30px #000}
+.subtitle{font-size:clamp(13px,2vw,17px);font-weight:400;color:var(--muted);margin:12px 0 42px}
+.rule{width:min(420px,78vw);height:2px;background:#ffffff1c;position:relative;overflow:hidden}
+.rule:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,var(--gold),#fff2c4,var(--gold),transparent);transform:translateX(100%);animation:load 3s ease-in-out infinite}
+@keyframes load{to{transform:translateX(-100%)}}
+.status{display:flex;align-items:center;gap:10px;color:#d8c9ad;font-size:13px;margin-top:18px}
+.dot{width:7px;height:7px;border-radius:50%;background:#d7ad62;box-shadow:0 0 12px #d7ad62;animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.3;transform:scale(.7)}}
+.tip{position:absolute;bottom:34px;right:24px;left:24px;color:#a99a80;font-size:12px}
+.version{position:absolute;bottom:34px;left:28px;direction:ltr;color:#756a58;font:11px Arial,sans-serif}
+@media(max-width:560px){main{min-height:100vh}.emblem{width:82px;height:82px;margin-bottom:30px}.emblem span{font-size:38px}.tip{bottom:64px;line-height:2}.version{bottom:22px;left:50%;transform:translateX(-50%)}}
+</style>
+</head>
+<body>
+<div class="ambient"></div>
+<main>
+<div class="emblem" aria-hidden="true"><span>خ</span></div>
+<div class="eyebrow">تاریخ را از نو بنویس</div>
+<h1>خیزش فرمانروایان</h1>
+<p class="subtitle">سرزمین در انتظار فرمانروای بعدی است...</p>
+<div class="rule" role="progressbar" aria-label="در حال بارگذاری"></div>
+<div class="status"><span class="dot"></span><span id="loadingText">در حال آماده‌سازی میدان نبرد</span></div>
+</main>
+<div class="tip" id="tip">راهنما: اتحادهای هوشمندانه می‌توانند سرنوشت یک امپراتوری را تغییر دهند.</div>
+<div class="version">KHIZEŠ-E FARMANRAVAYAN · PRE-ALPHA</div>
+<script>
+const messages=["در حال آماده‌سازی میدان نبرد","در حال گردآوری سپاهیان","در حال ترسیم نقشه سرزمین‌ها","تقریباً آماده‌ایم"];
+let i=0;setInterval(()=>{i=(i+1)%messages.length;document.getElementById("loadingText").textContent=messages[i]},2600);
+</script>
+</body>
+</html>
