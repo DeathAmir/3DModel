@@ -2,6 +2,13 @@ name: Build Persian AI Trailer (CPU + RAM)
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/build-persian-trailer.yml"
+      - "scripts/create_persian_trailer.py"
+      - "requirements-trailer-cpu.txt"
 
 permissions:
   contents: read
@@ -26,10 +33,10 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y ffmpeg fonts-noto-core
-      - name: Install CPU-only PyTorch
+      - name: Install CPU-only PyTorch and torchvision
         run: |
           python -m pip install --upgrade pip
-          python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
       - name: Install AI and video dependencies
         run: python -m pip install -r requirements-trailer-cpu.txt
       - name: Generate Persian AI trailer using CPU and system RAM
