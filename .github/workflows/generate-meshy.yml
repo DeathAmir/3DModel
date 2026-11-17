@@ -1,0 +1,77 @@
+name: Generate Nader Shah Afshar (Meshy AI)
+
+run-name: "خیزش فرمانروایان — Nader Shah 3D"
+
+on:
+  workflow_dispatch:
+    inputs:
+      texture_resolution:
+        description: "PBR texture resolution"
+        required: true
+        type: choice
+        options:
+          - "2k"
+          - "4k"
+        default: "4k"
+      geometry_resolution:
+        description: "Geometry detail"
+        required: true
+        type: choice
+        options:
+          - "standard"
+          - "2k"
+          - "4k"
+        default: "standard"
+      model_prompt:
+        description: "Optional English prompt override (max 800 characters)"
+        required: false
+        type: string
+        default: ""
+
+permissions:
+  contents: read
+
+concurrency:
+  group: meshy-nader-shah
+  cancel-in-progress: false
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 200
+    env:
+      MESHY_API_KEY: ${{ secrets.MESHY_API_KEY }}
+      TEXTURE_RESOLUTION: ${{ inputs.texture_resolution }}
+      GEOMETRY_RESOLUTION: ${{ inputs.geometry_resolution }}
+      MODEL_PROMPT: ${{ inputs.model_prompt }}
+      MESHY_MODEL: latest
+      PYTHONUNBUFFERED: "1"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Validate Meshy API access
+        run: |
+          if [ -z "$MESHY_API_KEY" ]; then
+            echo "::error::Add MESHY_API_KEY in Settings > Secrets and variables > Actions."
+            exit 1
+          fi
+
+      - name: Install generator dependencies
+        run: python -m pip install --upgrade pip
+
+      - name: Generate Nader Shah geometry and PBR textures with Meshy
+        run: python scripts/generate_meshy.py
+
+      - name: Upload textured model, PBR maps and preview
+        uses: actions/upload-artifact@v4
+        with:
+          name: kheezesh-farmanravaan-nader-shah-meshy
+          path: outputs/nader_shah_afshar/
+          if-no-files-found: error
+          retention-days: 30
