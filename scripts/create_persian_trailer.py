@@ -31,8 +31,8 @@ SCENES = [
 def run(args, **kwargs):
     subprocess.run(args, check=True, **kwargs)
 
-def download(url, target):
-    if target.exists() and target.stat().st_size > 100_000:
+def download(url, target, min_bytes=100_000):
+    if target.exists() and target.stat().st_size > min_bytes:
         return
     target.parent.mkdir(parents=True, exist_ok=True)
     request = urllib.request.Request(url, headers={"User-Agent": "KheezeshTrailer/1.0"})
@@ -42,7 +42,7 @@ def download(url, target):
             if not chunk:
                 break
             output.write(chunk)
-    if target.stat().st_size < 100_000:
+    if target.stat().st_size < min_bytes:
         raise RuntimeError(f"Downloaded model file looks incomplete: {target}")
 
 def font(size, bold=False):
@@ -119,7 +119,7 @@ def render_video():
 
 def make_voice():
     download(VOICE_BASE + "fa_IR-amir-medium.onnx", VOICE_MODEL)
-    download(VOICE_BASE + "fa_IR-amir-medium.onnx.json", VOICE_CONFIG)
+    download(VOICE_BASE + "fa_IR-amir-medium.onnx.json", VOICE_CONFIG, min_bytes=100)
     voice = OUT / "persian-narration.wav"
     run(["piper", "--model", str(VOICE_MODEL), "--config", str(VOICE_CONFIG),
          "--output_file", str(voice)], input=NARRATION.encode("utf-8"))
