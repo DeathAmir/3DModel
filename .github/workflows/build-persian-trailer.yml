@@ -1,4 +1,4 @@
-name: Build Persian Gameplay Trailer
+name: Build Persian AI Trailer (CPU + RAM)
 
 on:
   workflow_dispatch:
@@ -9,21 +9,38 @@ permissions:
 jobs:
   trailer:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 360
+    env:
+      CUDA_VISIBLE_DEVICES: ""
+      HF_HUB_ENABLE_HF_TRANSFER: "0"
+      OMP_NUM_THREADS: "6"
+      MKL_NUM_THREADS: "6"
+      IMAGE_MODEL: stabilityai/sd-turbo
     steps:
       - uses: actions/checkout@v4
-      - name: Install FFmpeg, Persian fonts and Python packages
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install FFmpeg and Persian fonts
         run: |
           sudo apt-get update
           sudo apt-get install -y ffmpeg fonts-noto-core
+      - name: Install CPU-only PyTorch
+        run: |
           python -m pip install --upgrade pip
-          python -m pip install edge-tts pillow arabic-reshaper python-bidi
-      - name: Build trailer with Persian narration
+          python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+      - name: Install AI and video dependencies
+        run: python -m pip install -r requirements-trailer-cpu.txt
+      - name: Generate Persian AI trailer using CPU and system RAM
         run: python scripts/create_persian_trailer.py
-      - name: Upload MP4 trailer
+      - name: Upload finished MP4 and generated scenes
         uses: actions/upload-artifact@v4
         with:
-          name: kheezesh-farmanravaan-persian-gameplay-trailer
-          path: outputs/trailer/kheezesh-farmanravaan-trailer-fa.mp4
+          name: kheezesh-farmanravaan-persian-ai-trailer-cpu
+          path: |
+            outputs/trailer/kheezesh-farmanravaan-trailer-fa.mp4
+            outputs/trailer/scenes/*.png
+            outputs/trailer/persian-narration.wav
           if-no-files-found: error
           retention-days: 30
