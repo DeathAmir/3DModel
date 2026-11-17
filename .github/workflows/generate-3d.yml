@@ -58,6 +58,15 @@ jobs:
       - name: Checkout project
         uses: actions/checkout@v4
 
+      - name: Set up Conda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          miniforge-variant: Miniforge3
+          miniforge-version: latest
+          python-version: "3.10"
+          auto-activate-base: true
+          use-mamba: true
+
       - name: Verify NVIDIA GPU and CUDA
         run: |
           nvidia-smi
